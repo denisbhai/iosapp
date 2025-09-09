@@ -1,87 +1,85 @@
 import 'dart:developer';
 import 'package:flutter/material.dart';
+import 'dart:async';
 
-/////////////////=============////////////////////
-//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-
-
-void main() => runApp(MaterialApp(home: MyList()));
-
-class MyList extends StatefulWidget {
-  @override
-  State<MyList> createState() => _MyListState();
+void main() {
+  runApp(MyApp());
 }
 
-class _MyListState extends State<MyList> {
-  List<String> items = ["Apple", "Banana", "Cherry"];
-
-  String name = "Denis is";
-
+class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    log("====name====${name.split(" ").join()}");
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("Without Key"),
-        actions: [
-          RepaintBoundary(
-            child: Container(
-              width: 200,
-              height: 200,
-              color: Colors.yellow,
-              child: Text("I won’t repaint unless I change!"),
-            ),
-          ),
-          RepaintBoundary(
-            child: Container(
-              width: 200,
-              height: 200,
-              color: Colors.yellow,
-              child: Text("I won’t repaint unless I change!"),
-            ),
-          ),
-        ],
-      ),
-      body: ListView(
-        children: items
-            .map((item) => CounterWidget(item, key: ValueKey(item)))
-            .toList(),
-      ),
-      floatingActionButton: FloatingActionButton(
-        child: Icon(Icons.swap_vert),
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => CounterWidget("demo")),
-          );
-          setState(() {
-            items.insert(0, items.removeAt(2)); // Swap Cherry to top
-          });
-        },
-      ),
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: 'Pagination Example',
+      theme: ThemeData(primarySwatch: Colors.blue),
+      home: MovingColorGrid(),
     );
   }
 }
 
-class CounterWidget extends StatefulWidget {
-  final String name;
-  CounterWidget(this.name, {Key? key}) : super(key: key);
+class MovingColorGrid extends StatefulWidget {
+  const MovingColorGrid({super.key});
 
   @override
-  State<CounterWidget> createState() => _CounterWidgetState();
+  State<MovingColorGrid> createState() => _MovingColorGridState();
 }
 
-class _CounterWidgetState extends State<CounterWidget> {
-  int counter = 0;
+class _MovingColorGridState extends State<MovingColorGrid> {
+  int startIndex = 0; // moving window index
+  final int totalItems = 20;
+
+  final colors = [Colors.green, Colors.yellow, Colors.red];
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Timer to move colors every 500ms
+    Timer.periodic(const Duration(seconds: 5), (timer) {
+      setState(() {
+        startIndex = (startIndex + 1) % totalItems;
+        log("startIndex===$startIndex====");
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      title: Text("${widget.name} (count: $counter)"),
-      trailing: IconButton(
-        icon: Icon(Icons.add),
-        onPressed: () => setState(() => counter++),
+    return Scaffold(
+      appBar: AppBar(title: const Text("Moving Colors Grid")),
+      body: GridView.builder(
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 4,
+          crossAxisSpacing: 8,
+          mainAxisSpacing: 8,
+        ),
+        itemCount: totalItems,
+        itemBuilder: (context, index) {
+          int relativeIndex = (index - startIndex + totalItems) % totalItems;
+          log('index=$relativeIndex ===$index==$startIndex==$totalItems===${(index - startIndex + totalItems) % totalItems}');
+
+          Color color = Colors.transparent;
+          if (relativeIndex >= 0 && relativeIndex < 3) {
+            color = colors[relativeIndex];
+            log('relativeIndex==$relativeIndex');
+          }
+
+          // final color = colors[index % colors.length]; // loop 3 colors
+
+          return Container(
+            decoration: BoxDecoration(
+              color: color,
+              border: Border.all(color: Colors.black12),
+            ),
+            child: Center(
+              child: Text(
+                "${index + 1}",
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+          );
+        },
       ),
     );
   }
