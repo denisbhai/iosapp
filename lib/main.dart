@@ -2,7 +2,6 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'dart:async';
 
-///==================================///
 void main() {
   runApp(MyApp());
 }
@@ -85,6 +84,3 @@ class _MovingColorGridState extends State<MovingColorGrid> {
     );
   }
 }
-// void main() {
-//   runApp(MyApp());
-// }
